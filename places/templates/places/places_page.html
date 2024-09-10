@@ -65,13 +65,11 @@
                         {% if place %}
                             {% include "./places_detail.html" with place=place %}
                         {% else %}
-                            <center>
-                                {% if self.no_place_message %}
-                                    <h2>{{ self.no_place_message|richtext }}</h2>
-                                {% else %}
-                                    <h2>{% translate "No place selected" %}</h2>
-                                {% endif %}
-                            </center>
+                            {% if self.no_place_message %}
+                                <h2>{{ self.no_place_message|richtext }}</h2>
+                            {% else %}
+                                <h2>{% translate "No place selected" %}</h2>
+                            {% endif %}
                         {% endif %}
                         
                     </div>
