@@ -11,9 +11,9 @@ A client has a single store, but ships/does work across multiple cities.
 The store will likely only show up if someone searches the name of the store, or a related keyword and the location/city name of where the store is located.  
 Let's say the store is located in New York, but the client also ships to Los Angeles, Chicago, and Miami.
 
-When someone searches for `"&lt;keyword&gt; in Los Angeles"`, the client's store will not show up in the search results, because the store is located in New York.
+When someone searches for `"<keyword> in Los Angeles"`, the client's store will not show up in the search results, because the store is located in New York.
 
-We aim to improve this by allowing a list of locations to be added to a `PlacesPage`, so that when someone searches for `"&lt;keyword&gt; in Los Angeles"`, the client's store will show up in the search results.
+We aim to improve this by allowing a list of locations to be added to a `PlacesPage`, so that when someone searches for `"<keyword> in Los Angeles"`, the client's store will show up in the search results.
 
 In short, the goal is to add a "place" for each city the client ships to, and the client's store will show up in the search results for each of those cities.
 
