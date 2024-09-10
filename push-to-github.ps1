@@ -9,6 +9,7 @@ if ($TagName -ne "0.0.0") {
 }
 
 $ProjectName = "wagtail-places"
+$DistName = "places"
 
 
 function IsNumeric ($Value) {
@@ -159,7 +160,7 @@ Function _PYPI_DistName {
         [string]$Append = ".tar.gz"
     )
 
-    return "$ProjectName-$Version$Append"
+    return "$DistName-$Version$Append"
 }
 
 Function PYPI_Build {
