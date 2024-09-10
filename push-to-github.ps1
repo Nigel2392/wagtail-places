@@ -9,7 +9,7 @@ if ($TagName -ne "0.0.0") {
 }
 
 $ProjectName = "wagtail-places"
-$DistName = "places"
+$DistName = "wagtail_places"
 
 
 function IsNumeric ($Value) {
