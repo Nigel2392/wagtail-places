@@ -178,7 +178,7 @@ class PlacesPage(RoutablePageMixin, Page):
         places = self.places.all()
         for place in places:
             urls.append({
-                "location": f"{full_url}{place.slug}/",
+                "location": f"{full_url}/places/{place.slug}/",
                 "changefreq": "monthly",
                 "priority": f"{(0.8 * priority_mul):.1f}",
             })
