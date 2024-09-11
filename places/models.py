@@ -161,3 +161,32 @@ class PlacesPage(RoutablePageMixin, Page):
             request,
             context_overrides=context
         )
+
+    def get_sitemap_urls(self, request = None, priority_mul = 1.0, get_translations = True):
+        urls = []
+
+        full_url = self.get_full_url(request=request)
+
+        urls.append({
+            "location": full_url,
+            "lastmod": self.latest_revision_created_at,
+            "changefreq": "monthly",
+            "priority": f"{priority_mul:.1f}",
+        })
+
+        places = self.places.all()
+        for place in places:
+            urls.append({
+                "location": f"{full_url}{place.slug}/",
+                "changefreq": "monthly",
+                "priority": f"{(0.8 * priority_mul):.1f}",
+            })
+
+        if get_translations:
+            for page in self.get_translations(inclusive=False):
+                urls.extend(
+                    page.get_sitemap_urls(request, priority_mul=0.8, get_translations=False)
+                )
+
+        return urls
+
