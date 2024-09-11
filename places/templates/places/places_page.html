@@ -28,7 +28,7 @@
                         {% endif %}
 
                         <div class="places-sidebar-content">
-                            {% for place in self.places.all %}
+                            {% for place in places %}
                                 <div class="place-item">
                                     {% routablepageurl self 'places_detail' place.slug as detail_url %}
                                     <a class="place-link"
