@@ -171,9 +171,9 @@ class PlacesPage(RoutablePageMixin, Page):
     # 
     # This is useful for sitemaps.
     def calc_changefreq(self, page: "PlacesPage"):
-        page = getattr(page, "change_frequency", None)
-        if page:
-            return page
+        freq = getattr(page, "change_frequency", None)
+        if freq:
+            return freq
 
         freqlist: list[datetime] = list(page.revisions.values_list("created_at", flat=True))
         if not freqlist:
