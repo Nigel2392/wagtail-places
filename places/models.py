@@ -21,10 +21,14 @@ from wagtail.admin.panels import (
 )
 from wagtail.admin.widgets.slug import SlugInput
 from modelcluster.fields import ParentalKey
+from datetime import datetime
 
 from .settings import (
     PLACES_EXTEND_TEMPLATE,
     google_api_key,
+)
+from .util import (
+    matcher,
 )
 
 # Create your models here.
@@ -163,30 +167,69 @@ class PlacesPage(RoutablePageMixin, Page):
             context_overrides=context
         )
 
+    # Calculate the change frequency of the page.
+    # 
+    # This is useful for sitemaps.
+    def calc_changefreq(self, page: "PlacesPage"):
+        page = getattr(page, "change_frequency", None)
+        if page:
+            return page
+
+        freqlist: list[datetime] = list(page.revisions.values_list("created_at", flat=True))
+        if not freqlist:
+            return "monthly"
+        
+        if len(freqlist) == 1:
+            return "monthly"
+        
+        freqlist.sort()
+        freqlist.reverse()
+        delta = freqlist[0] - freqlist[-1]
+
+        return str(matcher(delta.days, lambda days, cmp: days < cmp, (
+                (1, "daily"),
+                (7, "weekly"),
+                (30, "monthly"),
+                (365, "yearly"),
+            ), default="monthly"))
+
+    # Get the sitemap urls for the page.
+    # 
+    # This tells Wagtail what urls to include in the sitemap.
     def get_sitemap_urls(self, request = None, priority_mul = 1.0, get_translations = True):
         urls = []
 
         full_url = self.get_full_url(request=request)
 
+        change_freq = self.calc_changefreq(self)
+
         urls.append({
             "location": full_url,
+            "changefreq": change_freq,
             "lastmod": self.latest_revision_created_at,
-            "changefreq": "monthly",
             "priority": f"{priority_mul:.1f}",
         })
 
         places = self.places.all()
         for place in places:
             urls.append({
+                "changefreq": change_freq,
                 "location": f"{full_url}places/{place.slug}/",
-                "changefreq": "monthly",
                 "priority": f"{(0.8 * priority_mul):.1f}",
             })
 
         if get_translations:
             for page in self.get_translations(inclusive=False):
+                page: "PlacesPage"
+
+                translated_sitemap_urls = page.get_sitemap_urls(
+                    request=request,
+                    priority_mul=0.8,
+                    get_translations=False,
+                )
+
                 urls.extend(
-                    page.get_sitemap_urls(request, priority_mul=0.8, get_translations=False)
+                    translated_sitemap_urls,
                 )
 
         return urls
