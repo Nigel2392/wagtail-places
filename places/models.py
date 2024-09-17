@@ -219,7 +219,9 @@ class PlacesPage(RoutablePageMixin, Page):
             })
 
         if get_translations:
-            for page in self.get_translations(inclusive=False):
+            for page in self.get_translations(inclusive=False)\
+                    .live()\
+                    .public():
                 page: "PlacesPage"
 
                 translated_sitemap_urls = page.get_sitemap_urls(
