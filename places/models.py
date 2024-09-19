@@ -202,6 +202,9 @@ class PlacesPage(RoutablePageMixin, Page):
     def get_sitemap_urls(self, request = None, priority_mul = 1.0, get_translations = True):
         urls = []
 
+        if not self.live:
+            return urls
+
         full_url = self.get_full_url(request=request)
 
         change_freq = self.calc_changefreq(self)
