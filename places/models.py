@@ -133,6 +133,7 @@ class PlacesPage(RoutablePageMixin, Page):
         return super().get_context(request, *args, **kwargs) | {
             "EXTEND_TEMPLATE": PLACES_EXTEND_TEMPLATE,
             "places": self.places.all(),
+            "is_canonical": True,
         }
 
     @path("places/<slug:slug>/", name="places_detail")
@@ -146,6 +147,7 @@ class PlacesPage(RoutablePageMixin, Page):
             "google_maps_api_key": google_api_key(
                 request,
             ),
+            "is_canonical": False,
         }
 
         if hasattr(request, "is_htmx") and request.is_htmx or\
