@@ -147,6 +147,7 @@ class PlacesPage(RoutablePageMixin, Page):
             "google_maps_api_key": google_api_key(
                 request,
             ),
+            "extra_title": place.name,
             "is_canonical": False,
         }
 
