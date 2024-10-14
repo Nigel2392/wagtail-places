@@ -1,6 +1,8 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.http import HttpRequest
 from django.shortcuts import get_object_or_404
+from django.template import Template, RequestContext
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 from wagtail.models import (
@@ -78,6 +80,7 @@ class Place(Orderable):
 class PlacesPage(RoutablePageMixin, Page):
     template = "places/places_page.html"
     detail_template = "places/places_detail.html"
+    search_description = None
 
     places: models.QuerySet[Place]
 
@@ -117,6 +120,12 @@ class PlacesPage(RoutablePageMixin, Page):
             "document-link", "image", "embed",
         ],
     )
+    seo_description_template = models.TextField(
+        max_length=1000,
+        help_text=_("SEO Description Template, Django template syntax is allowed."),
+        blank=True,
+        null=True,
+    )
 
     content_panels = Page.content_panels + [
         FieldPanel("description"),
@@ -125,9 +134,34 @@ class PlacesPage(RoutablePageMixin, Page):
         InlinePanel("places", heading=_("Sidebar Places"), label=_("Place")),
     ]
 
+    promote_panels = Page.promote_panels + [
+        FieldPanel("seo_description_template"),
+    ]
+
     class Meta:
         verbose_name = _("Places Page")
         verbose_name_plural = _("Places Pages")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.current_place = None
+
+    def places_search_description(self, place: Place, request: HttpRequest):
+        if self.seo_description_template and place:
+            template = Template(
+                self.seo_description_template,
+            )
+            context = RequestContext(request, {
+                "page": self,
+                "place": place,
+            })
+            
+            text = template.render(
+                context,
+            )
+            return text.strip()
+        
+        return super().search_description
 
     def get_context(self, request, *args, **kwargs):
         return super().get_context(request, *args, **kwargs) | {
@@ -142,6 +176,8 @@ class PlacesPage(RoutablePageMixin, Page):
             self.places, slug=slug,
         )
 
+        self.current_place = place
+
         context = {
             "place": place,
             "google_maps_api_key": google_api_key(
@@ -150,6 +186,10 @@ class PlacesPage(RoutablePageMixin, Page):
             "extra_title": place.name,
             "is_canonical": False,
         }
+
+        self.search_description = self.places_search_description(
+            place, request,
+        )
 
         if hasattr(request, "is_htmx") and request.is_htmx or\
                 request.headers.get("HX-Request") == "true":
