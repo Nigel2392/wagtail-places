@@ -184,6 +184,7 @@ class PlacesPage(RoutablePageMixin, Page):
                 request,
             ),
             "extra_title": place.name,
+            "hide_canonical_tag": True,
             "is_canonical": True,
         }
 
