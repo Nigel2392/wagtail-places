@@ -167,7 +167,6 @@ class PlacesPage(RoutablePageMixin, Page):
         return super().get_context(request, *args, **kwargs) | {
             "EXTEND_TEMPLATE": PLACES_EXTEND_TEMPLATE,
             "places": self.places.all(),
-            "is_canonical": True,
         }
 
     @path("places/<slug:slug>/", name="places_detail")
