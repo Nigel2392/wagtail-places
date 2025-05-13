@@ -263,7 +263,7 @@ class PlacesPage(RoutablePageMixin, Page):
         for place in places:
             urls.append({
                 "changefreq": change_freq,
-                "location": f"{full_url}places/{place.slug}/",
+                "location": f"{full_url}{place.slug}/",
                 "priority": f"{(0.8 * priority_mul):.1f}",
             })
 
