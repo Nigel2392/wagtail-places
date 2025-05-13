@@ -49,6 +49,10 @@
     flex-direction: column;
     gap: 0.5rem;
 }
+.places-sidebar-heading-text {
+    font-size: 1.2em;
+    font-weight: bold;
+}
 .place-item {
 
 }

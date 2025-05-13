@@ -170,7 +170,7 @@ class PlacesPage(RoutablePageMixin, Page):
             "is_canonical": True,
         }
 
-    @path("places/<slug:slug>/", name="places_detail")
+    @path("<slug:slug>/", name="places_detail")
     def places_detail(self, request, slug):
         place = get_object_or_404(
             self.places, slug=slug,
@@ -196,11 +196,13 @@ class PlacesPage(RoutablePageMixin, Page):
                 request.headers.get("HX-Request") == "true":
             
             # Render the detail (htmx partial) template.
-            return self.render(
+            response = self.render(
                 request,
                 context_overrides=context,
                 template=self.detail_template,
             )
+            response.headers["HX-Trigger"] = "places-changed"
+            return response
 
         # Render the full page template.
         # 

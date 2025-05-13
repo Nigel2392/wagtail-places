@@ -11,6 +11,13 @@
 
 {% block extra_js %}
     {{block.super}}
+    <script>
+        document.addEventListener("places-changed", function() {
+            const placeName = document.getElementById("place-name");
+            const placeNameReplace = document.getElementById("place-name-replace");
+            placeName.innerHTML = `: ${placeNameReplace.innerHTML}`;
+        });
+    </script>
 {% endblock %}
 
 {% block content %}
@@ -23,7 +30,7 @@
 
                         {% if self.sidebar_title %}
                             <div class="places-sidebar-heading places-heading">
-                                <h2>{{ self.sidebar_title }}</h2>
+                                <p class="places-sidebar-heading-text">{{ self.sidebar_title }}</p>
                             </div>
                         {% endif %}
 
@@ -54,7 +61,7 @@
                     <details class="places-details"{% if not place %} open{% endif %}>
                         <summary>
                             <div class="places-heading">
-                                <h1>{{ self.title }}{% if place %} | {{ place.name }}{% endif %}</h1>
+                                <h1>{{ self.title }}<span id="place-name">{% if place %}: {{ place.name }}{% endif %}</span></h1>
                             </div>
                         </summary>
                         <p>{{ self.description|richtext }}</p>
