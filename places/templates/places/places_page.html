@@ -11,13 +11,6 @@
 
 {% block extra_js %}
     {{block.super}}
-    <script type="text/javascript">
-        document.addEventListener("places-changed", function() {
-            const placeName = document.getElementById("place-name");
-            const placeNameReplace = document.getElementById("place-name-replace");
-            placeName.innerHTML = `: ${placeNameReplace.innerHTML}`;
-        });
-    </script>
 {% endblock %}
 
 {% block content %}
