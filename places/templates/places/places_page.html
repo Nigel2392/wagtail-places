@@ -11,7 +11,7 @@
 
 {% block extra_js %}
     {{block.super}}
-    <script>
+    <script type="text/javascript">
         document.addEventListener("places-changed", function() {
             const placeName = document.getElementById("place-name");
             const placeNameReplace = document.getElementById("place-name-replace");
