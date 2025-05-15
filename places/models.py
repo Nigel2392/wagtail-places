@@ -80,6 +80,7 @@ class Place(Orderable):
 class PlacesPage(RoutablePageMixin, Page):
     template = "places/places_page.html"
     detail_template = "places/places_detail.html"
+    change_frequency = "monthly"
     search_description = None
 
     places: models.QuerySet[Place]
@@ -264,7 +265,8 @@ class PlacesPage(RoutablePageMixin, Page):
             urls.append({
                 "changefreq": change_freq,
                 "location": f"{full_url}{place.slug}/",
-                "priority": f"{(0.8 * priority_mul):.1f}",
+                "lastmod": self.latest_revision_created_at,
+                "priority": f"{(0.9 * priority_mul):.1f}",
             })
 
         if get_translations:
