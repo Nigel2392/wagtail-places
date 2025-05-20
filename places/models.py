@@ -52,6 +52,11 @@ class Place(Orderable):
         "image",
         "embed",
     ])
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name=_("Updated At"),
+        help_text=_("The date and time the place was last updated."),
+    )
 
     panels = [
         TitleFieldPanel("name", targets=["slug"]),
@@ -78,9 +83,16 @@ class Place(Orderable):
         ordering = ["sort_order"]
 
 class PlacesPage(RoutablePageMixin, Page):
+    class ChangeFrequency(models.TextChoices):
+        MONTHLY = "monthly", _("Monthly")
+        WEEKLY = "weekly", _("Weekly")
+        DAILY = "daily", _("Daily")
+        NONE = "none", _("None")
+        AUTO_CALC = "auto", _("Auto Calculate")
+
     template = "places/places_page.html"
     detail_template = "places/places_detail.html"
-    change_frequency = "monthly"
+    # change_frequency = "monthly"
     search_description = None
 
     places: models.QuerySet[Place]
@@ -127,6 +139,33 @@ class PlacesPage(RoutablePageMixin, Page):
         blank=True,
         null=True,
     )
+    seo_change_frequency = models.CharField(
+        max_length=10,
+        choices=ChangeFrequency.choices,
+        default=ChangeFrequency.NONE,
+        help_text=_(
+            "SEO Change Frequency, this tells search engines how often the page is updated.\n"
+            "If you want to exclude the change frequency, set it to 'None'."
+        ),
+    )
+    seo_priority = models.PositiveSmallIntegerField(
+        help_text=_(
+            "SEO Priority, the higher the number, the higher the priority. (0-100)\n"
+            "If you want to use the default priority, set it to 0.\n"
+            "100 is the highest priority and is translated to 1.0 in the sitemap.xml.\n"
+            "0 is the lowest priority and is translated to 0.1 in the sitemap.xml."
+        ),
+        default=100,
+    )
+    seo_priority_places = models.PositiveSmallIntegerField(
+        help_text=_(
+            "SEO Priority for Places, the higher the number, the higher the priority. (0-100)\n"
+            "If you want to use the default priority, set it to 0.\n"
+            "100 is the highest priority and is translated to 1.0 in the sitemap.xml.\n"
+            "0 is the lowest priority and is translated to 0.1 in the sitemap.xml."
+        ),
+        default=100,
+    )
 
     content_panels = Page.content_panels + [
         FieldPanel("description"),
@@ -137,6 +176,9 @@ class PlacesPage(RoutablePageMixin, Page):
 
     promote_panels = Page.promote_panels + [
         FieldPanel("seo_description_template"),
+        FieldPanel("seo_change_frequency"),
+        FieldPanel("seo_priority"),
+        FieldPanel("seo_priority_places"),
     ]
 
     class Meta:
@@ -146,6 +188,10 @@ class PlacesPage(RoutablePageMixin, Page):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.current_place = None
+
+    @classmethod
+    def calculate_seo_priority(cls, priority: int) -> str:
+        return round(0.1 + (priority / 100) * 0.9, 2)
 
     def places_search_description(self, place: Place, request: HttpRequest):
         if self.seo_description_template and place:
@@ -221,6 +267,12 @@ class PlacesPage(RoutablePageMixin, Page):
         freq = getattr(page, "change_frequency", None)
         if freq:
             return freq
+        
+        if page.seo_change_frequency == PlacesPage.ChangeFrequency.NONE:
+            return None
+        
+        if page.seo_change_frequency != PlacesPage.ChangeFrequency.AUTO_CALC:
+            return page.seo_change_frequency
 
         freqlist: list[datetime] = list(page.revisions.values_list("created_at", flat=True))
         if not freqlist:
@@ -251,23 +303,45 @@ class PlacesPage(RoutablePageMixin, Page):
 
         full_url = self.get_full_url(request=request)
 
-        change_freq = self.calc_changefreq(self)
-
-        urls.append({
+        sitemap_item = {
             "location": full_url,
-            "changefreq": change_freq,
             "lastmod": self.latest_revision_created_at,
-            "priority": f"{priority_mul:.1f}",
-        })
+            # "priority": f"{priority_mul:.1f}",
+        }
+
+        change_freq = self.calc_changefreq(
+            self,
+        )
+
+        if change_freq:
+            sitemap_item["changefreq"] = change_freq
+
+        if self.seo_priority:
+            p = PlacesPage.calculate_seo_priority(self.seo_priority_places)
+            p = p * priority_mul
+            sitemap_item["priority"] = f"{p:.1f}"
+
+        urls.append(sitemap_item)
 
         places = self.places.all()
         for place in places:
-            urls.append({
-                "changefreq": change_freq,
+            places_sitemap_item = {
                 "location": f"{full_url}{place.slug}/",
-                "lastmod": self.latest_revision_created_at,
-                "priority": f"{(0.9 * priority_mul):.1f}",
-            })
+                "lastmod": place.updated_at,
+                # "priority": f"{(0.9 * priority_mul):.1f}",
+            }
+
+            if change_freq:
+                places_sitemap_item["changefreq"] = change_freq
+
+            if self.seo_priority_places:
+                priority = PlacesPage.calculate_seo_priority(
+                    self.seo_priority_places
+                )
+                priority = priority * priority_mul
+                places_sitemap_item["priority"] = f"{priority:.1f}"
+
+            urls.append(places_sitemap_item)
 
         if get_translations:
             for page in self.get_translations(inclusive=False)\
